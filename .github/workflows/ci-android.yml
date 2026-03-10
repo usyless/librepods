@@ -25,14 +25,16 @@ jobs:
           wget https://raw.githubusercontent.com/aosp-mirror/platform_build/master/target/product/security/testkey.pk8
           wget https://raw.githubusercontent.com/aosp-mirror/platform_build/master/target/product/security/testkey.x509.pem
 
-          unsigned_apk=$(find android/app/build/outputs/apk -name "*.apk")
+          unsigned_apk=$(find app/build/outputs/apk -name "*.apk")
           apksigner sign \
             --key testkey.pk8 \
             --cert testkey.x509.pem \
             --out app-release-signed.apk \
             "$unsigned_apk"
+
+          ls -lh app-release-signed.apk
         working-directory: android
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          path: app-release-signed.apk
+          path: android/app-release-signed.apk
