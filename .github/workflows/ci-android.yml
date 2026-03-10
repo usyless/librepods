@@ -17,10 +17,22 @@ jobs:
           java-version: 21
       - uses: gradle/actions/setup-gradle@v4
       - name: Build debug APK
-        run: ./gradlew assembleDebug
+        run: |
+          ./gradlew assembleRelease
+
+          sudo apt-get update
+          sudo apt-get install -y apksigner
+          wget https://raw.githubusercontent.com/aosp-mirror/platform_build/master/target/product/security/testkey.pk8
+          wget https://raw.githubusercontent.com/aosp-mirror/platform_build/master/target/product/security/testkey.x509.pem
+
+          unsigned_apk=$(ls android/app/build/outputs/apk/**/*.apk)
+          apksigner sign \
+            --key testkey.pk8 \
+            --cert testkey.x509.pem \
+            --out app-release-signed.apk \
+            "$unsigned_apk"
         working-directory: android
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Debug APK
-          path: android/app/build/outputs/apk/**/*.apk
+          path: app-release-signed.apk
