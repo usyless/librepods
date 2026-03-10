@@ -32,6 +32,37 @@ jobs:
           java-version: 21
       - uses: gradle/actions/setup-gradle@v4
       - name: Build debug APK
+        run: |
+          ./gradlew assembleRelease
+
+          sudo apt-get update
+          sudo apt-get install -y apksigner
+          wget https://raw.githubusercontent.com/aosp-mirror/platform_build/master/target/product/security/testkey.pk8
+          wget https://raw.githubusercontent.com/aosp-mirror/platform_build/master/target/product/security/testkey.x509.pem
+
+          unsigned_apk=$(ls android/app/build/outputs/apk/**/*.apk)
+          apksigner sign \
+            --key testkey.pk8 \
+            --cert testkey.x509.pem \
+            --out app-release-signed.apk \
+            "$unsigned_apk"
+        working-directory: android
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          path: app-release-signed.apk
+  build-release-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build debug APK
         run: ./gradlew assembleDebug
         working-directory: android
       - name: Upload artifact
